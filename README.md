@@ -20,6 +20,6 @@ AdventOfCode/
 
 ## How It Works
 
-    **Programming Language:** The programming language and file formats may vary from year to year. Expect solutions in different file extensions and styles depending on what I decided to use that year.
+**Programming Language:** The programming language and file formats may vary from year to year. Expect solutions in different file extensions and styles depending on what I decided to use that year.
 
-    **Input Files:** Each day's folder contains an input.txt file, which holds my personalized input for that day's challenge.
+**Input Files:** Each day's folder contains an input.txt file, which holds my personalized input for that day's challenge.
