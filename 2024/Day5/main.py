@@ -155,5 +155,78 @@ def part2() -> None:
     print(middle_sum)
 
 
+def create_graph(rules: list[OrderRule]) -> dict[int, list[int]]:
+    graph: dict[int, list[int]] = {}
+
+    for rule in rules:
+        if rule.x in graph:
+            graph[rule.x].append(rule.y)
+        else:
+            graph[rule.x] = []
+
+    for rule in rules:
+        if rule.y not in graph:
+            graph[rule.y] = []
+
+    return graph
+
+
+def depth_search(
+    current: int,
+    visited_dict: dict[int, bool],
+    visted_nodes: list[int],
+    graph: dict[int, list[int]],
+) -> None:
+    visited_dict[current] = True
+
+    edges: list[int] = graph[current]
+    for edge in edges:
+        if visited_dict[edge] == False:
+            depth_search(edge, visited_dict, visted_nodes, graph)
+
+    visted_nodes.append(current)
+
+
+def top_sort(relevant_rules: list[OrderRule]) -> Update:
+    graph: dict[int, list[int]] = create_graph(relevant_rules)
+    num_nodes: int = len(graph.keys())
+    visited_dict: dict[int, bool] = {node: False for node in graph.keys()}
+    correct_order: list[int] = [0 for _ in range(num_nodes)]
+    index: int = num_nodes - 1
+
+    for node in graph.keys():
+        if visited_dict[node] == False:
+            visisted_nodes: list[int] = []
+            depth_search(node, visited_dict, visisted_nodes, graph)
+            for nodeId in visisted_nodes:
+                correct_order[index] = nodeId
+                index -= 1
+
+    return Update(correct_order)
+
+
+def part2_top_sort() -> None:
+    lines: list[str] = read_file("test.txt")
+    updates: list[Update] = get_updates(lines)
+    order_rules: list[OrderRule] = get_order_rules(lines)
+    invalid_updates: list[Update] = []
+
+    for update in updates:
+        if not is_valid_update(update, order_rules):
+            invalid_updates.append(update)
+
+    new_updates: list[Update] = []
+    for update in invalid_updates:
+        new_updates.append(
+            top_sort(get_relevant_rules(update.page_numbers, order_rules))
+        )
+
+    middle_sum: int = 0
+    for update in new_updates:
+        middle_sum += get_middle(update)
+
+    print(middle_sum)
+
+
 if __name__ == "__main__":
-    part2()
+    part2_top_sort()
