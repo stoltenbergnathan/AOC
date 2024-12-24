@@ -49,25 +49,35 @@ class Map:
             [MapSymbol.free for _ in range(max_col + 1)] for _ in range(max_row + 1)
         ]
 
+        self.bytes = bytes
         for byte_index in range(bytes_to_read):
             byte_col, byte_row = bytes[byte_index].split(",")
             byte_pos: Position = Position(int(byte_row), int(byte_col))
 
             self.map[byte_pos.row][byte_pos.col] = MapSymbol.corrupted
 
+        self.byte_index = bytes_to_read
+
         self.start: Position = Position(0, 0)
         self.end: Position = Position(max_row, max_col)
 
         self.path: PositionNode | None = None
+
+    def read_next_byte(self) -> Position:
+        byte_col, byte_row = self.bytes[self.byte_index].split(",")
+        byte_pos: Position = Position(int(byte_row), int(byte_col))
+        self.set(byte_pos, MapSymbol.corrupted)
+
+        self.byte_index += 1
+
+        return byte_pos
 
     def show_path(self) -> None:
         if self.path is None:
             return
         current_node: PositionNode | None = self.path
         while current_node is not None:
-            self.map[current_node.position.row][
-                current_node.position.col
-            ] = MapSymbol.taken
+            self.set(current_node.position, MapSymbol.taken)
             current_node = current_node.parent
 
     def clear_path(self) -> None:
@@ -75,9 +85,8 @@ class Map:
             return
         current_node: PositionNode | None = self.path
         while current_node is not None:
-            self.map[current_node.position.row][
-                current_node.position.col
-            ] = MapSymbol.free
+            if self.get(current_node.position) == MapSymbol.taken:
+                self.set(current_node.position, MapSymbol.free)
             current_node = current_node.parent
 
         self.path = None
@@ -90,6 +99,9 @@ class Map:
 
     def get(self, position: Position) -> MapSymbol:
         return self.map[position.row][position.col]
+
+    def set(self, position: Position, value: MapSymbol) -> None:
+        self.map[position.row][position.col] = value
 
     def is_in_map(self, position: Position) -> bool:
         return 0 <= position.row < len(self.map) and 0 <= position.col < len(
@@ -152,7 +164,7 @@ class Map:
 
             closed_set.add(q)
 
-        raise Exception("No path found")
+        return -1
 
 
 def read_lines(filename: str) -> list[str]:
@@ -164,13 +176,19 @@ def main() -> None:
     FILE = "input.txt"
     ROWS = 70
     COLS = 70
-    BYTES_TO_READ = 1024
+    BYTES_TO_READ = 2898
+
     bytes: list[str] = read_lines(FILE)
     map: Map = Map(bytes, ROWS, COLS, BYTES_TO_READ)
-    map.display()
-    print(map.solve())
+
+    while map.solve() != -1:
+        p = map.read_next_byte()
+        map.clear_path()
+
     map.show_path()
     map.display()
+
+    print(p.col, p.row)
 
 
 if __name__ == "__main__":
